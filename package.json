@@ -1,24 +1,79 @@
 {
     "author": "DanielLimaDF",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.1"
+    },
     "keywords": [],
     "name": "bsg-75",
     "pebble": {
         "capabilities": [
-            ""
+            "configurable",
+            "health"
         ],
         "displayName": "Battlestar Galactica BSG75",
         "enableMultiJS": true,
-        "messageKeys": [],
+        "messageKeys": [
+            "showSteps",
+            "showBattery",
+            "showDate"
+        ],
         "projectType": "native",
         "resources": {
-            "media": []
+            "media": [
+                {
+                    "file": "images/feet",
+                    "name": "IMAGE_FEET",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bat_2",
+                    "name": "BATTERY_CHARGING",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bat_1",
+                    "name": "BATTERY_NORMAL",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bsg_pb_insignia",
+                    "name": "BSG_PB_INSIGNIA",
+                    "targetPlatforms": [
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bsg_insignia",
+                    "name": "BSG_INSIGNIA",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9]",
+                    "file": "fonts/BSG_FONT.ttf",
+                    "name": "BSG_FONT_40",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [
-            "basalt"
+            "aplite",
+            "basalt",
+            "chalk"
         ],
-        "uuid": "056ad6fe-8297-4ea8-8268-d056187b905c",
+        "uuid": "d01908e9-964e-4899-a63b-4067b211deb1",
         "watchapp": {
             "watchface": true
         }
