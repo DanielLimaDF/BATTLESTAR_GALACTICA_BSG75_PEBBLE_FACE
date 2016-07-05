@@ -2,6 +2,8 @@
 #include <pebble.h>
 #include <math.h>
 
+#define SETTINGS_KEY 1
+
 Window *my_window;
 
 //text
@@ -42,27 +44,49 @@ char batteryStatus[5];
 float batteryBarCalculation;
 int batteryStatusBarSize;
 
+//Complications booleans struct
+// A structure containing settings
+typedef struct ClaySettings {
+  bool displayBattery;
+  bool displayDate;
+  bool displaySteps;
+} __attribute__((__packed__)) ClaySettings;
+
+ClaySettings settings;
+
 //Complications UPDATE
 
 //Steps count update
 
 static void health_handler(HealthEventType event, void *context) {
   
-  HealthMetric metric = HealthMetricStepCount;
-  time_t start = time_start_of_today();
-  time_t end = time(NULL);
+  if(settings.displaySteps){
   
-  int totalSteps;
-  
-  HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
-  start, end);
-  
-  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    HealthMetric metric = HealthMetricStepCount;
+    time_t start = time_start_of_today();
+    time_t end = time(NULL);
     
-    totalSteps = (int)health_service_sum_today(metric);
+    int totalSteps;
     
-    snprintf(stepsStatus,20, "%d", totalSteps);
-    text_layer_set_text(stepsCountTextLayer, stepsStatus);
+    HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
+    start, end);
+    
+    if(mask & HealthServiceAccessibilityMaskAvailable) {
+      
+      totalSteps = (int)health_service_sum_today(metric);
+      
+      snprintf(stepsStatus,20, "%d", totalSteps);
+      text_layer_set_text(stepsCountTextLayer, stepsStatus);
+      
+    }
+    
+    layer_set_hidden(bitmap_layer_get_layer(feetIconBitmapBackground),false);
+    layer_set_hidden(text_layer_get_layer(stepsCountTextLayer),false);
+    
+  }else{
+    
+    layer_set_hidden(bitmap_layer_get_layer(feetIconBitmapBackground),true);
+    layer_set_hidden(text_layer_get_layer(stepsCountTextLayer),true);
     
   }
   
@@ -71,43 +95,52 @@ static void health_handler(HealthEventType event, void *context) {
 //Battery update
 static void updateBattery() {
   
-  //Battery status
-  BatteryChargeState state = battery_state_service_peek();
-  int statusValue = (int)state.charge_percent;
-  snprintf(batteryStatus,5, "%d%%", statusValue);
-  text_layer_set_text(batteryStatusPercentage, batteryStatus);
+  if(settings.displayBattery){
   
-  batteryBarCalculation = statusValue*19;
-  batteryBarCalculation = batteryBarCalculation/100;
-  
-  batteryStatusBarSize = roundf(batteryBarCalculation);
-  
-  //Change size
-  text_layer_set_size(batteryStatusRectangle, GSize(batteryStatusBarSize,5));
-  
-  if(statusValue <= 20){
-    text_layer_set_background_color(batteryStatusRectangle, GColorOrange);
-  }else{
-    text_layer_set_background_color(batteryStatusRectangle, GColorWhite);
-  }
-  
-  //Check if battery is charging
-  if(state.is_charging){
-    //Hide normal battery icon and show charging battery bitmap
+    //Battery status
+    BatteryChargeState state = battery_state_service_peek();
+    int statusValue = (int)state.charge_percent;
+    snprintf(batteryStatus,5, "%d%%", statusValue);
+    text_layer_set_text(batteryStatusPercentage, batteryStatus);
     
+    batteryBarCalculation = statusValue*19;
+    batteryBarCalculation = batteryBarCalculation/100;
+    
+    batteryStatusBarSize = roundf(batteryBarCalculation);
+    
+    //Change size
+    text_layer_set_size(batteryStatusRectangle, GSize(batteryStatusBarSize,5));
+    
+    if(statusValue <= 20){
+      text_layer_set_background_color(batteryStatusRectangle, GColorOrange);
+    }else{
+      text_layer_set_background_color(batteryStatusRectangle, GColorWhite);
+    }
+    
+    //Check if battery is charging
+    if(state.is_charging){
+      //Hide normal battery bitmap and show charging battery bitmap
+      
+      layer_set_hidden(bitmap_layer_get_layer(batteryBitmapBackground),true);
+      layer_set_hidden(bitmap_layer_get_layer(batteryChargingBitmapBackground),false);
+      layer_set_hidden(text_layer_get_layer(batteryStatusRectangle),true);
+      layer_set_hidden(text_layer_get_layer(batteryStatusPercentage),true);
+      
+    }else{
+      //You know...
+      
+      layer_set_hidden(bitmap_layer_get_layer(batteryBitmapBackground),false);
+      layer_set_hidden(bitmap_layer_get_layer(batteryChargingBitmapBackground),true);
+      layer_set_hidden(text_layer_get_layer(batteryStatusRectangle),false);
+      layer_set_hidden(text_layer_get_layer(batteryStatusPercentage),false);
+      
+    }
+    
+  }else{
     layer_set_hidden(bitmap_layer_get_layer(batteryBitmapBackground),true);
-    layer_set_hidden(bitmap_layer_get_layer(batteryChargingBitmapBackground),false);
+    layer_set_hidden(bitmap_layer_get_layer(batteryChargingBitmapBackground),true);
     layer_set_hidden(text_layer_get_layer(batteryStatusRectangle),true);
     layer_set_hidden(text_layer_get_layer(batteryStatusPercentage),true);
-    
-  }else{
-    //You know...
-    
-    layer_set_hidden(bitmap_layer_get_layer(batteryBitmapBackground),false);
-    layer_set_hidden(bitmap_layer_get_layer(batteryChargingBitmapBackground),true);
-    layer_set_hidden(text_layer_get_layer(batteryStatusRectangle),false);
-    layer_set_hidden(text_layer_get_layer(batteryStatusPercentage),false);
-    
   }
   
   
@@ -137,14 +170,17 @@ static void update_time() {
   text_layer_set_text(textTime1_layer, H_buffer);
   text_layer_set_text(textTime2_layer, M_buffer);
   
+  if(settings.displayDate){
   
-  //date
-  static char date_buffer[18];
-  strftime(date_buffer, sizeof(date_buffer), "%a\n%d %b", tick_time);
-  
-  // Show date
-  text_layer_set_text(textDate_layer, date_buffer);
-  
+    //date
+    static char date_buffer[18];
+    strftime(date_buffer, sizeof(date_buffer), "%a\n%d %b", tick_time);
+    
+    // Show date
+    text_layer_set_text(textDate_layer, date_buffer);
+  }else{
+    text_layer_set_text(textDate_layer, "");
+  }
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -155,6 +191,71 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 
 
+//Clay settings
+
+static void prv_default_settings() {
+  settings.displayBattery = true;
+  settings.displayDate = true;
+  settings.displaySteps = true;
+}
+
+// Read settings from persistent storage
+static void prv_load_settings() {
+  // Load the default settings
+  prv_default_settings();
+  // Read settings from persistent storage, if they exist
+  persist_read_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
+// Save the settings to persistent storage
+static void prv_save_settings() {
+  persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
+
+static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {
+  
+  // Read boolean preferences
+  Tuple *toggleBattery = dict_find(iter, MESSAGE_KEY_showBattery);
+  if(toggleBattery) {
+    settings.displayBattery = toggleBattery->value->int32 == 1;
+  }
+  
+  Tuple *toggleDate = dict_find(iter, MESSAGE_KEY_showDate);
+  if(toggleDate) {
+    settings.displayDate = toggleDate->value->int32 == 1;
+  }
+  
+  Tuple *toggleSteps = dict_find(iter, MESSAGE_KEY_showSteps);
+  if(toggleSteps) {
+    settings.displaySteps = toggleSteps->value->int32 == 1;
+  }
+  
+  updateBattery();
+  update_time();
+  
+  if(!settings.displaySteps){
+    layer_set_hidden(bitmap_layer_get_layer(feetIconBitmapBackground),true);
+    layer_set_hidden(text_layer_get_layer(stepsCountTextLayer),true);
+  }else{
+    layer_set_hidden(bitmap_layer_get_layer(feetIconBitmapBackground),false);
+    layer_set_hidden(text_layer_get_layer(stepsCountTextLayer),false);
+  }
+  
+  // Save the new settings to persistent storage
+  prv_save_settings();
+  
+}
+
+void prv_init(void) {
+  
+  //Load default or stored settings
+  prv_load_settings();
+  
+  // Open AppMessage connection
+  app_message_register_inbox_received(prv_inbox_received_handler);
+  app_message_open(128, 128);
+}
 
 
 void handle_init(void) {
@@ -397,6 +498,7 @@ void handle_deinit(void) {
 }
 
 int main(void) {
+  prv_init();
   handle_init();
   app_event_loop();
   handle_deinit();
