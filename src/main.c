@@ -90,6 +90,7 @@ static void health_handler(HealthEventType event, void *context) {
     
   }
   
+  
 }
 
 //Battery update
@@ -169,6 +170,7 @@ static void update_time() {
   // Display this time on the TextLayer
   text_layer_set_text(textTime1_layer, H_buffer);
   text_layer_set_text(textTime2_layer, M_buffer);
+  
   
   if(settings.displayDate){
   
@@ -437,8 +439,6 @@ void handle_init(void) {
       text_layer_set_text_alignment(stepsCountTextLayer, GTextAlignmentCenter);
       layer_add_child(window_get_root_layer(my_window), (Layer*) stepsCountTextLayer);
       
-      //Test only
-      //text_layer_set_text(stepsCountTextLayer, "4242");
   
     }
       

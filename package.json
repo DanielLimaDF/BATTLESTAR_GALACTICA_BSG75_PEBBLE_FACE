@@ -21,6 +21,13 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/icon",
+                    "menuIcon": true,
+                    "name": "ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/feet",
                     "name": "IMAGE_FEET",
                     "targetPlatforms": [
